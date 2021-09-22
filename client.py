@@ -1,46 +1,50 @@
-import main
-import server
 import socket
 import random
+import time
+from typing import Type
+import var
+import update
 
 #sends request every 3 sec to node in map
+def blacklist_node(host, port):
+    var.blacklist.add((host,port))
+    try:
+        del var.table[(host,port)]
+    except KeyError:
+        pass
+    try:
+        var.ip[host].remove(port)
+    except KeyError:
+        pass
 
 def connect_node(host, port):
     #set up connection
+    host = str(host)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(3)
     try:
-        s = socket.create_connection(address=(host,port), timeout=3)
-    except TimeoutError:
-        main.blacklist.add((host,port))
-        del main.table[(host,port)]
-        main.ip[host].remove(port)
-        return None
-    
-    data = s.recv().decode(encoding='ascii')
+        s.connect((host,port))
+        data = s.recv(2560).decode(encoding='ascii') #assuming each line is less than 10 bytes
+    except socket.timeout: #ConnectionRefusedError
+        #blacklist_node(host, port)
+        print('socket timeout')
+        s.close()
+        return
+    except ConnectionRefusedError:
+        print('connection error')
+        s.close()
+        return
+
     s.close()
-    return data
+    update.update_map(data)
 
-    
+def start_client():
+    while True:
+        if len(var.table)>1:
+            host,port = random.choice(list(var.table.keys()))
+            while host==var.HOST and port==var.PORT:
+                host,port = random.choice(var.table.keys())
+            connect_node(host, port)
 
-        
-        
-
-
-
-#connect to port
-
-
-import socket            
- 
-# Create a socket object
-s = socket.socket()        
- 
-# Define the port on which you want to connect
-port = 12345               
- 
-# connect to the server on local computer
-s.connect(('127.0.0.1', port))
- 
-# receive data from the server and decoding to get the string.
-print (s.recv(1024).decode())
-# close the connection
-s.close() 
+        print('Attempted connection')
+        time.sleep(3)

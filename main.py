@@ -17,16 +17,23 @@ def init_controller():
     controller.read_inputs()
 
 while True:
-    ip = input("Enter address in host:port format. ")
+    ip = input("Enter address in host:port format. ") #enter the port?
     h,p = update.parse_address(ip)
     if h!='' and p>-1:
         break
 var.init_ip(h,p)
 #init_server()
 #init_client()
-init_controller()
+#init_controller()
 
-#_thread.start_new_thread(init_input, ())
+lock = threading.Lock()
+t1 = threading.Thread(target=init_server, args=())
+t2 = threading.Thread(target=init_client, args=())
+t3 = threading.Thread(target=init_controller, args=())
+
+t1.start()
+t2.start()
+t3.start()
 #_thread.start_new_thread(init_server,('127.0.0.1', 1234))
 #_thread.start_new_thread(init_client, ())
 

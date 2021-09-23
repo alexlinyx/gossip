@@ -41,9 +41,10 @@ def connect_node(host, port):
 def start_client():
     while True:
         if len(var.table)>1:
-            host,port = random.choice(list(var.table.keys()))
+            keys = list(var.table.keys())
+            host,port = random.choice(keys)
             while host==var.HOST and port==var.PORT:
-                host,port = random.choice(var.table.keys())
+                host,port = random.choice(keys)
             connect_node(host, port)
 
         print('Attempted connection')

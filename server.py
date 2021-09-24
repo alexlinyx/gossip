@@ -9,6 +9,7 @@ import time
 
 def send_message(c, addr=None):
     if var.evil:
+        time.sleep(3)
         host, port = update.parse_address(addr)
         msg = "{}:{},{},{}\n".format(host, port, sys.maxsize, sys.maxsize)
         c.send(msg.encode(encoding='ascii'))
@@ -18,7 +19,6 @@ def send_message(c, addr=None):
             c.send(msg1.encode(encoding='ascii'))
             c.send(msg2.encode(encoding='ascii'))
             c.send('\n'.encode(encoding='ascii'))
-        time.sleep(3)
     else:
         var.t_lock.acquire()
         for (host,port),(ts,digit) in var.table.items():

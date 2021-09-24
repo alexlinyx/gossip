@@ -2,9 +2,6 @@ import var
 from datetime import datetime
 import ipaddress
 
-
-error = "Invalid command"
-
 def verify_address(host, port):
     try:
         h = ipaddress.ip_address(host)
@@ -20,7 +17,6 @@ def parse_address(addr):
         port = addr[i+1:]
         if verify_address(host, port):
             return str(host), int(port)
-    print(error)
     return '', -1
 
 def check_old_time(old, new):

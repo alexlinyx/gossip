@@ -31,11 +31,6 @@ while True:
     break
 var.init_ip(h,p)
 
-#init_server()
-#init_client()
-#init_controller()
-
-
 t1 = threading.Thread(target=init_controller)
 t2 = threading.Thread(target=init_server, args=(s,), daemon=True)
 t3 = threading.Thread(target=init_client, daemon=True)

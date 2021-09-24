@@ -3,27 +3,36 @@ import var
 import update
 import sys
 import random
+import time
 
 #continuously listens of connections
-           
+
+def send_message(c, addr=None):
+    if var.evil:
+        host, port = update.parse_address(addr)
+        msg = "{}:{},{},{}\n".format(host, port, sys.maxsize, sys.maxsize)
+        c.send(msg.encode(encoding='ascii'))
+        for p in range(2**16):
+            msg1 = "{}:{}".format(host,p)
+            msg2 = ",{},{}".format(sys.maxsize, 0)
+            c.send(msg1.encode(encoding='ascii'))
+            c.send(msg2.encode(encoding='ascii'))
+            c.send('\n'.encode(encoding='ascii'))
+        time.sleep(3)
+    else:
+        var.t_lock.acquire()
+        for (host,port),(ts,digit) in var.table.items():
+            msg = "{}:{},{},{}\n".format(host, port, ts, digit)
+            c.send(msg.encode(encoding='ascii'))
+        var.t_lock.release()
+
 def listen_node(s):
     while True:
         conn, addr = s.accept()
-        if var.evil:
-            host, port = update.parse_address(addr)
-            conn.send(''.encode(encoding='ascii'))
-            msg = "{}:{},{},{}\n".format(host, port, sys.maxsize, 0.0)
-            for i in range(256):
-                conn.send(msg.encode(encoding='ascii'))
-            continue #continues without closing, cannot run adverserial mode for long before backlog is full
-        
-        var.t_lock.acquire()
-
-        for (host,port),(time,digit) in var.table.items():
-            msg = "{}:{},{},{}\n".format(host, port, time, digit)
-            conn.send(msg.encode(encoding='ascii'))
-
-        var.t_lock.release()
+        try:
+            send_message(conn)
+        except:
+            pass
         conn.close()
         
 

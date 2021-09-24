@@ -2,5 +2,26 @@ import server
 import client
 import controller
 import update
-import main
 import var
+#test vector for all non socket, threading functions
+#socket tested via multiple instance of the program
+#no easy way to test 
+
+def test_update():
+    assert(update.verify_address('0.0.0.0', 1))
+    assert(update.verify_address('225.225.225.225', 2**16-1))
+    assert(not update.verify_address('0.0.0', 1))
+    assert(not update.verify_address('0.0.0.0', -1))
+
+    #parse_address, checkoldtime, checknewtime, checkip, updateentry, updatemap
+
+
+def test_client():
+    pass 
+    #blacklistnode
+
+def test_controller():
+    pass #format input
+
+print('testing')
+test_update()

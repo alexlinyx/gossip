@@ -20,8 +20,7 @@ def print_map(command):
 def format_input(msg): #returns True if bad input, False if good input
     msg = msg.strip()
     if len(msg)==0:
-        pass
-
+        return False
     elif len(msg)==1:
         if msg=='q':
             return False

@@ -9,8 +9,8 @@ def verify_address(host, port):
     try:
         h = ipaddress.ip_address(host)
         p = int(port)
-        return p>=0 and p<=2**16-1
-    except ValueError:
+        return p>0 and p<2**16
+    except:
         return False
 
 def parse_address(addr):
@@ -31,17 +31,21 @@ def check_new_time(new):
     return new<=t
 
 def check_ip(host, port, time):
+    var.ip_lock.acquire()
     try:
         open_ports = var.ip[host]
-    except KeyError:
+    except:
         var.ip[host] = {port}
-        return port
+        var.ip_lock.release()
+        return True
     
     if port in open_ports:
-        return port
+        var.ip_lock.release()
+        return True
     elif len(open_ports)<3:
         var.ip[host].add(port)
-        return port
+        var.ip_lock.release()
+        return True
     else:
         old_time = time
         old_port = port
@@ -50,56 +54,70 @@ def check_ip(host, port, time):
             if p_time < old_time:
                 old_time = p_time
                 old_port = p
-        if old_port!=port:
-            open_ports.add(port)
-            open_ports.remove(old_port)
+        if old_port==port:
+            var.ip_lock.release()
+            return False
+        open_ports.add(port)
+        open_ports.remove(old_port)
+        del var.table[(host,old_port)]
         var.ip[host] = open_ports
-        return old_port
+        var.ip_lock.release()
+        return True
 
-### only allow first 3 per ip, check var.ip
-# circular import with client!!!!
-def update_entry(addr, time, digit):
+def check_blacklist(host, port):
+    var.b_lock.acquire()
+    ret = (host,port) in var.blacklist
+    var.b_lock.release()
+    return ret
+
+def update_entry(addr, time, digit, mine=False):
+    var.t_lock.acquire()
     host, port = parse_address(addr)
-    if (host,port) in var.blacklist:
+    if port==var.PORT and host==var.HOST and not mine: #only I can update my own digit
+        var.t_lock.release()
+        return
+    
+    if check_blacklist(host, port):
+        var.t_lock.release()
         return
     
     try:
-        last_time, _ = var.table[host, port]
-    except KeyError:
+        last_time, last_digit = var.table[host, port]
+    except:
         if check_new_time(time):
-            #lock
-            old_port = check_ip(host, port, time)
-            if old_port==port:
+            if check_ip(host, port, time):
                 var.table[host,port] = (time, digit)
                 msg = "{}:{} --> {}".format(host, port, digit)
                 print(msg)
+        var.t_lock.release()
         return
     
     if check_old_time(last_time, time) and check_new_time(time):
-        #lock
-        old_port = check_ip(host, port, time)
-        if old_port==port:
+        if check_ip(host, port, time):
             var.table[host,port] = (time, digit)
-            msg = "{}:{} --> {}".format(host, port, digit)
-            print(msg)
+            if last_digit!=digit:
+                msg = "{}:{} --> {}".format(host, port, digit)
+                print(msg)
+    var.t_lock.release()
 
 def update_map(data):
     try:
-        lines = data.split(chr(10)) #split on newline, take first 256
-    except TypeError:
-        print('TypeError')
+        lines = data.split(chr(10))
+    except:
         return
     if len(lines)>256:
         lines = lines[:256]
-    #print(lines)
+    
     for l in lines:
-        #print(l)
         try:
             addr, time, digit = l.strip().split(',') #need to check for formatting on inputs
-        except ValueError:
-            #can I blacklist a node for passing bad information
-            #blacklist_node(host, port)
-            #return
+        except:
             continue
-        update_entry(addr, int(time), int(digit))
-        print(var.table)
+        try:
+            time = int(time)
+            digit = int(digit)
+        except:
+            print('time, digit error')
+            continue
+        if digit>=0 and digit<=9:
+            update_entry(addr, int(time), int(digit))

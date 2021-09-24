@@ -1,4 +1,6 @@
-import socket
-s = socket.gethostname()
-print(s)
-print(type(s))
+import server
+import client
+import controller
+import update
+import main
+import var

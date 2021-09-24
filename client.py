@@ -7,45 +7,43 @@ import update
 
 #sends request every 3 sec to node in map
 def blacklist_node(host, port):
-    var.blacklist.add((host,port))
-    try:
-        del var.table[(host,port)]
-    except KeyError:
-        pass
-    try:
-        var.ip[host].remove(port)
-    except KeyError:
-        pass
+    var.b_lock.acquire()
+    if host!=var.HOST or port!=var.PORT: #cannot blacklist myself
+        var.blacklist.add((host,port))
+        try:
+            del var.table[(host,port)]
+        except:
+            pass
+        try:
+            var.ip[host].remove(port)
+        except:
+            pass
+    var.b_lock.release()
 
 def connect_node(host, port):
-    #set up connection
     host = str(host)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(3)
     try:
         s.connect((host,port))
-        data = s.recv(2560).decode(encoding='ascii') #assuming each line is less than 10 bytes
-    except socket.timeout: #ConnectionRefusedError
-        #blacklist_node(host, port)
-        print('socket timeout')
+        data = s.recv(25600).decode(encoding='ascii') #should be more than enough for 256 lines at 100 bytes per line
+    except socket.timeout: 
+        blacklist_node(host, port)
         s.close()
         return
-    except ConnectionRefusedError:
-        print('connection error')
+    except: 
         s.close()
         return
-
     s.close()
     update.update_map(data)
 
 def start_client():
     while True:
-        if len(var.table)>1:
-            keys = list(var.table.keys())
-            host,port = random.choice(keys)
-            while host==var.HOST and port==var.PORT:
-                host,port = random.choice(keys)
+        var.t_lock.acquire()
+        keys = list(var.table.keys())
+        var.t_lock.release()
+        host,port = random.choice(keys)
+        if host!=var.HOST or port!=var.PORT:
             connect_node(host, port)
 
-        print('Attempted connection')
         time.sleep(3)

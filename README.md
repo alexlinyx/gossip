@@ -22,3 +22,5 @@ b – prints blacklisted nodes;
 a – switch to adversarial mode
 
 python3 main.py to run
+
+Enter IP address and port to receive incoming connections. (You can only assign the port, and IP address is assigned automatically from your machine, but enter it accordingly to initialize variables correctly)

@@ -12,8 +12,15 @@ def test_update():
     assert(update.verify_address('225.225.225.225', 2**16-1))
     assert(not update.verify_address('0.0.0', 1))
     assert(not update.verify_address('0.0.0.0', -1))
+    print('Passed verify_address tests')
 
+    h,p = '127.0.0.1', 1234
+    addr = h+':'+str(p)
     #parse_address, checkoldtime, checknewtime, checkip, updateentry, updatemap
+
+    var.table = {}
+    var.ip = {}
+    
 
 
 def test_client():

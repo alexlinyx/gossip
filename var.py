@@ -12,7 +12,7 @@ HOST = ''
 PORT = 0
 
 def init_ip(host, port):
-    global HOST 
+    global HOST
     HOST = host
     global PORT 
     PORT = port

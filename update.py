@@ -69,6 +69,10 @@ def check_blacklist(host, port):
 def update_entry(addr, time, digit, mine=False):
     var.t_lock.acquire()
     host, port = parse_address(addr)
+    if host=='' and port==-1:
+        var.t_lock.release()
+        return
+
     if port==var.PORT and host==var.HOST and not mine: #only I can update my own digit
         var.t_lock.release()
         return
@@ -110,10 +114,9 @@ def update_map(data):
         except:
             continue
         try:
-            time = int(time)
+            time = int(round(time))
             digit = int(digit)
         except:
-            print('time, digit error')
             continue
         if digit>=0 and digit<=9:
             update_entry(addr, int(time), int(digit))
